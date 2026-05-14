@@ -14,6 +14,7 @@ import DetailsStep from "@/components/DetailsStep";
 import HostStep from "@/components/HostStep";
 import ReviewStep from "@/components/ReviewStep";
 import ConfirmationStep from "@/components/ConfirmationStep";
+import InactivityGuard from "@/components/InactivityGuard";
 
 type Step =
   | "loading"
@@ -107,7 +108,7 @@ export default function CheckinPage() {
           consent_type: "visitor_checkin",
         },
         existing_visitor_id: existingVisitorId,
-        source: "qr_self_checkin",
+        source: "ipad_kiosk",
       };
       const response = await api.submitVisit(payload);
       setConfirmationMessage(response.confirmation_message);
@@ -139,8 +140,22 @@ export default function CheckinPage() {
     );
   }
 
+  const isFlowActive =
+    step === "privacy" ||
+    step === "lookup" ||
+    step === "details" ||
+    step === "host" ||
+    step === "review";
+
   return (
     <>
+      {isFlowActive && (
+        <InactivityGuard
+          warningAfterMs={90_000}
+          resetAfterMs={120_000}
+          onReset={resetState}
+        />
+      )}
       {step === "privacy" && config && (
         <PrivacyStep config={config} onContinue={() => setStep("lookup")} />
       )}

@@ -1,7 +1,12 @@
-# IMR visitor self check-in — frontend
+# IMR visitor self check-in — phone/QR frontend
 
 Mobile-first Next.js app for the visitor self check-in flow described in
-`docs/plan.md`.
+`docs/plan.md`. Each visit submitted from this app is tagged
+`source = "qr_self_checkin"`.
+
+The iPad-kiosk variant lives at `../frontend-ipad/` and runs on port 3001 so
+both versions can run side-by-side against the same backend. See
+`../docs/running-both-frontends.md`.
 
 ## Development
 

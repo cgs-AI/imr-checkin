@@ -1,9 +1,12 @@
 """Pydantic request and response schemas."""
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+VisitSource = Literal["qr_self_checkin", "ipad_kiosk"]
 
 
 class CheckinConfig(BaseModel):
@@ -63,6 +66,7 @@ class CreateVisitRequest(BaseModel):
     host_name_raw: str | None = Field(default=None, max_length=200)
     consent: ConsentPayload
     existing_visitor_id: UUID | None = None
+    source: VisitSource = "qr_self_checkin"
 
 
 class CreateVisitResponse(BaseModel):

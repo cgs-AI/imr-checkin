@@ -21,7 +21,12 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379/0"
 
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:3001",
+        ]
+    )
 
     consent_text_version: str = "2026-05-01"
     privacy_text: str = (

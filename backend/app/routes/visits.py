@@ -48,6 +48,7 @@ async def submit_visit(
         visitor_id=visitor.id,
         host_id=host.id if host else None,
         host_name_raw=payload.host_name_raw,
+        source=payload.source,
     )
 
     client_host = request.client.host if request.client else None

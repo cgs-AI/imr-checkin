@@ -106,6 +106,58 @@ async def test_lookup_requires_email_or_phone(client):
 
 
 @pytest.mark.asyncio
+async def test_visit_source_defaults_to_qr_self_checkin(client, session_factory, consent_payload):
+    host = await _make_host(session_factory)
+    response = await client.post(
+        "/visits",
+        json={
+            "visitor": {"full_name": "Default Source", "email": "ds@example.com"},
+            "host_id": str(host.id),
+            "consent": consent_payload,
+        },
+    )
+    assert response.status_code == 201
+
+    async with session_factory() as session:
+        visit = (await session.execute(select(Visit))).scalars().one()
+        assert visit.source == "qr_self_checkin"
+
+
+@pytest.mark.asyncio
+async def test_visit_source_ipad_kiosk_is_recorded(client, session_factory, consent_payload):
+    host = await _make_host(session_factory)
+    response = await client.post(
+        "/visits",
+        json={
+            "visitor": {"full_name": "Kiosk Visitor", "email": "kiosk@example.com"},
+            "host_id": str(host.id),
+            "consent": consent_payload,
+            "source": "ipad_kiosk",
+        },
+    )
+    assert response.status_code == 201
+
+    async with session_factory() as session:
+        visit = (await session.execute(select(Visit))).scalars().one()
+        assert visit.source == "ipad_kiosk"
+
+
+@pytest.mark.asyncio
+async def test_visit_rejects_unknown_source(client, session_factory, consent_payload):
+    host = await _make_host(session_factory)
+    response = await client.post(
+        "/visits",
+        json={
+            "visitor": {"full_name": "Bad", "email": "bad@example.com"},
+            "host_id": str(host.id),
+            "consent": consent_payload,
+            "source": "smoke_signal",
+        },
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_visit_without_email_skips_hubspot_jobs(client, session_factory, consent_payload):
     host = await _make_host(session_factory)
     body = {
