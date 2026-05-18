@@ -1,5 +1,8 @@
 # Deployment notes
 
+For a full step-by-step IMR test rollout (hardware, Phase A phone/QR, Phase B
+iPad, verification checklists), see **`deployment-plan-imr-test.md`**.
+
 ## Components
 
 - **Backend**: FastAPI app served by `uvicorn` (or `gunicorn` with the
