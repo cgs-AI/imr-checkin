@@ -2,7 +2,6 @@
 
 from collections.abc import AsyncIterator
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -46,12 +45,3 @@ async def client(session_factory) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
-
-
-@pytest.fixture
-def consent_payload() -> dict[str, object]:
-    return {
-        "granted": True,
-        "consent_text_version": "2026-05-01",
-        "consent_type": "visitor_checkin",
-    }

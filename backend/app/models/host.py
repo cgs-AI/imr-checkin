@@ -1,6 +1,5 @@
-"""Host model — synced from Microsoft Graph staff directory."""
+"""Host model — manually seeded staff directory."""
 
-from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import Index
@@ -12,7 +11,6 @@ class Host(SQLModel, table=True):
     __table_args__ = (
         Index("ix_hosts_display_name", "display_name"),
         Index("ix_hosts_email", "email", unique=True),
-        Index("ix_hosts_graph_user_id", "graph_user_id"),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -20,6 +18,4 @@ class Host(SQLModel, table=True):
     email: str = Field(nullable=False, max_length=320)
     job_title: str | None = Field(default=None, max_length=200)
     department: str | None = Field(default=None, max_length=200)
-    graph_user_id: str | None = Field(default=None, max_length=128)
     account_enabled: bool = Field(default=True, nullable=False)
-    last_synced_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

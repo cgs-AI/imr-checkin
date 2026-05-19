@@ -21,8 +21,5 @@ class Visit(SQLModel, table=True):
     host_name_raw: str | None = Field(default=None, max_length=200)
     arrived_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     source: str = Field(default="qr_self_checkin", nullable=False, max_length=64)
-    hubspot_contact_id: str | None = Field(default=None, max_length=64)
-    hubspot_note_id: str | None = Field(default=None, max_length=64)
-    hubspot_synced_at: datetime | None = Field(default=None)
     host_notified_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

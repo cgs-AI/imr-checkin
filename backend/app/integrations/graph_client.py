@@ -1,7 +1,4 @@
-"""Microsoft Graph client for staff directory sync and sendMail."""
-
-from collections.abc import AsyncIterator
-from typing import Any
+"""Microsoft Graph client — sendMail only."""
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -13,8 +10,6 @@ logger = get_logger(__name__)
 
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 TOKEN_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-
-USER_FIELDS = "id,displayName,mail,userPrincipalName,jobTitle,department,accountEnabled"
 
 
 class GraphClient:
@@ -55,25 +50,6 @@ class GraphClient:
         if self._token is None:
             self._token = await self._fetch_token()
         return {"Authorization": f"Bearer {self._token}"}
-
-    async def iter_users(self) -> AsyncIterator[dict[str, Any]]:
-        if not self._configured():
-            logger.warning("graph.skip_user_sync", reason="not_configured")
-            return
-        url: str | None = f"{GRAPH_BASE}/users?$select={USER_FIELDS}&$top=100"
-        async with httpx.AsyncClient(timeout=30) as client:
-            while url:
-                headers = await self._auth_headers()
-                response = await client.get(url, headers=headers)
-                if response.status_code == 401:
-                    self._token = None
-                    headers = await self._auth_headers()
-                    response = await client.get(url, headers=headers)
-                response.raise_for_status()
-                payload = response.json()
-                for user in payload.get("value", []):
-                    yield user
-                url = payload.get("@odata.nextLink")
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     async def send_mail(
