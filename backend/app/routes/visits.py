@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.models.host import Host
+from app.services.hubspot import sync_visit_to_hubspot
 from app.services.notify import send_host_notification
 from app.services.schemas import CreateVisitRequest, CreateVisitResponse
 from app.services.visit_service import create_visit
@@ -52,6 +53,9 @@ async def submit_visit(
 
     if host is not None:
         background_tasks.add_task(send_host_notification, visitor, host, visit)
+
+    if visitor.email:
+        background_tasks.add_task(sync_visit_to_hubspot, visitor, visit)
 
     return CreateVisitResponse(
         visit_id=visit.id,

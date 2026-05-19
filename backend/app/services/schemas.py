@@ -35,6 +35,7 @@ class VisitorLookupResponse(BaseModel):
     match: VisitorSummary | None
     matched_by: str | None = None
     ambiguous: bool = False
+    hubspot_prefilled: bool = False
 
 
 class HostSummary(BaseModel):

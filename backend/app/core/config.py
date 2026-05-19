@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     graph_client_secret: str | None = None
     graph_sender_upn: str = "reception@imr.ie"
 
+    hubspot_access_token: str | None = None
+    hubspot_base_url: str = "https://api.hubapi.com"
+
     host_search_min_chars: int = 2
     host_search_limit: int = 10
 

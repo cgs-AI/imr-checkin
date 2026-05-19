@@ -99,6 +99,7 @@ All backend settings are environment variables. Copy `backend/.env.example` to `
 | `GRAPH_CLIENT_ID` | For email | App registration client ID |
 | `GRAPH_CLIENT_SECRET` | For email | App registration client secret |
 | `GRAPH_SENDER_UPN` | For email | UPN of the mailbox used to send (e.g. `reception@imr.ie`) |
+| `HUBSPOT_ACCESS_TOKEN` | For CRM sync | HubSpot private app token. When absent, CRM sync and pre-fill are skipped silently. |
 | `CORS_ORIGINS` | Optional | Comma-separated list of allowed frontend origins |
 | `SITE_NAME` | Optional | Displayed in the UI (default: `Irish Manufacturing Research`) |
 
@@ -156,7 +157,6 @@ e2e/              Playwright end-to-end specs
 
 See `docs/user-requirements.md` §5 for the full Stage 2 (Production MVP) feature list. In short:
 
-- No HubSpot CRM sync
 - No Microsoft Graph staff directory sync (hosts seeded manually)
 - No admin API or erasure workflow
 - No consent audit trail

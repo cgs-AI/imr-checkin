@@ -73,7 +73,8 @@ Requirements use **UR-** identifiers. All Stage 1 requirements are **Must** (blo
 | UR-3.2 | The system shall search the local visitor database by email (normalised) or phone (normalised to E.164 where valid). |
 | UR-3.3 | If exactly one local match is found, the form shall pre-fill name, email, phone, company, and job title for review and edit. |
 | UR-3.4 | If multiple visitors share the same phone number, the system shall not auto-select a match; the visitor shall enter details manually. |
-| UR-3.5 | If no local match is found, the visitor shall continue to the details step with empty or self-entered fields. |
+| UR-3.5 | If no local match is found and the visitor provided an email, the system shall query HubSpot CRM for a matching contact and pre-fill details if found (`hubspot_prefilled` flag returned). |
+| UR-3.6 | If no local or HubSpot match is found, the visitor shall continue with empty or self-entered fields. |
 
 ### 4.4 Visitor details
 
@@ -117,15 +118,24 @@ Requirements use **UR-** identifiers. All Stage 1 requirements are **Must** (blo
 
 | ID | Requirement |
 |----|-------------|
-| UR-8.1 | After check-in, the system shall queue an email to the selected host's address, typically within a few minutes. |
+| UR-8.1 | After check-in, the system shall send an email to the selected host's address (as a background task; visitor is not blocked). |
 | UR-8.2 | The email shall include visitor name, company, job title, phone, email, and arrival time. |
 
-### 4.9 Local data storage
+### 4.9 HubSpot CRM sync
 
 | ID | Requirement |
 |----|-------------|
-| UR-9.1 | Each visit shall be stored locally with visitor details, host reference, arrival time, and source. |
-| UR-9.2 | A health endpoint (`/healthz`) shall be available for basic uptime monitoring. |
+| UR-9.1 | If the visitor provided an email, the system shall create or update a HubSpot Contact after check-in (background task). |
+| UR-9.2 | The system shall add a visit Note on the HubSpot contact timeline with visitor details and arrival time. |
+| UR-9.3 | If the visitor did not provide an email, HubSpot sync shall not run; the visit is still stored locally. |
+| UR-9.4 | If HubSpot is not configured (`HUBSPOT_ACCESS_TOKEN` absent), CRM sync is skipped silently — check-in is unaffected. |
+
+### 4.10 Local data storage
+
+| ID | Requirement |
+|----|-------------|
+| UR-10.1 | Each visit shall be stored locally with visitor details, host reference, arrival time, and source. |
+| UR-10.2 | A health endpoint (`/healthz`) shall be available for basic uptime monitoring. |
 
 ---
 
@@ -148,15 +158,12 @@ These requirements are required before go-live on production but are **not** nee
 | UR-S2-2.2 | Must | Sync shall update display name, email, job title, department, and enabled flag. |
 | UR-S2-2.3 | Should | IT may trigger a manual sync before go-live if the scheduled job has not yet run. |
 
-### 5.3 HubSpot CRM integration
+### 5.3 HubSpot retry and visibility
 
 | ID | Priority | Requirement |
 |----|----------|-------------|
-| UR-S2-3.1 | Must | If the visitor provided an email, the system shall create or update a HubSpot Contact and add a visit Note on the contact timeline. |
-| UR-S2-3.2 | Must | If the visitor did not provide an email, HubSpot jobs shall not run; the visit shall still be stored locally. |
-| UR-S2-3.3 | Must | Failed HubSpot jobs shall remain retryable; status and last error shall be visible in the database for IT support. |
-| UR-S2-3.4 | Should | HubSpot sync is asynchronous (cron/worker intervals); visitors are not blocked waiting for CRM sync. |
-| UR-S2-3.5 | Should | HubSpot CRM lookup to pre-fill visitors who exist only in HubSpot is not implemented; see [plan_hubspot_prefill.md](plan_hubspot_prefill.md). |
+| UR-S2-3.1 | Should | Failed HubSpot sync attempts shall be retryable; status and last error shall be visible in the database for IT support. |
+| UR-S2-3.2 | Should | HubSpot data retention follows IMR CRM policy, not automatically purged by this application. |
 
 ### 5.4 Administration and data subject rights
 
@@ -269,7 +276,9 @@ PoC is acceptable when, on IMR test infrastructure:
 
 1. **Phase A:** QR check-in completes on iPhone and Android; visit stored in database; host email received.
 2. **Phase B:** iPad check-in completes; `source` is `ipad_kiosk`; inactivity reset behaves as specified.
-3. **Reception smoke test:** a real staff member completes the flow and confirms it is usable.
+3. **HubSpot:** for a visitor with email, a HubSpot Contact is created/updated and a visit Note appears on the timeline.
+4. **HubSpot pre-fill:** a visitor with an existing HubSpot record (but no local record) has their details pre-filled on the lookup step.
+5. **Reception smoke test:** a real staff member completes the flow and confirms it is usable.
 
 ### 9.2 Production MVP sign-off
 
@@ -293,7 +302,8 @@ MVP is acceptable when, in addition to the PoC criteria:
 | Host search | `GET /hosts` | PoC |
 | Host email | `workers/notify.py` | PoC |
 | Graph directory sync | `workers/directory_sync.py` | MVP |
-| HubSpot sync | `workers/hubspot.py` | MVP |
+| HubSpot sync (post-visit) | `services/hubspot.py` + `integrations/hubspot_client.py` | PoC |
+| HubSpot pre-fill (lookup) | `routes/visitors.py` + `integrations/hubspot_client.py` | PoC |
 | Consent / privacy audit | `PrivacyStep`, `consent_events` | MVP |
 | Erasure | `DELETE /admin/visitors/{id}` | MVP |
 | Retention | `workers/retention.py` | MVP |
